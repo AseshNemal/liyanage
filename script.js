@@ -7,8 +7,22 @@ let output = "";
 const calculate = (btnValue) => {
   display.focus();
   if (btnValue === "=" && output !== "") {
-    //If output has '%', replace with '/100' before evaluating.
-    output = eval(output.replace("%", "/100"));
+    try {
+      // Convert percent occurrences (e.g. 50% -> (50/100))
+      const sanitized = output.replace(/(\d+(?:\.\d+)?)%/g, "($1/100)");
+      // Use Function constructor instead of eval for a tiny safety improvement
+      // this still evaluates simple math expressions only.
+      // Allowed characters: digits, operators, parentheses, dot
+      if (/^[0-9()+\-*/.\s]+$/.test(sanitized)) {
+        // eslint-disable-next-line no-new-func
+        const result = Function(`return ${sanitized}`)();
+        output = String(result);
+      } else {
+        output = "";
+      }
+    } catch (err) {
+      output = ""
+    }
   } else if (btnValue === "AC") {
     output = "";
   } else if (btnValue === "DEL") {
